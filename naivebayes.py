@@ -6,7 +6,8 @@ from sklearn.naive_bayes import GaussianNB, ComplementNB
 from sklearn.model_selection import KFold
 
 
-test_code = ""
+keys = []
+test_src = ""
 test_result = ""
 
 
@@ -33,7 +34,29 @@ def vectorize(tokens):
     d = collections.defaultdict(int)
     for k in tokens:
         d[k] += 1
-    return [n for _, n in d.items()]
+    return [[i, n] for i, n in d.items()]
+
+
+def merge_vec(vec1, vec2):
+    pass
+
+
+def apply_vec(tokens, vec):
+    new_vec = [[i, 0] for i, _ in vec]
+    print()
+    print("APPLY VEC:", len(vec), len(new_vec), new_vec)
+    print()
+    keys = {x[0]: idx for idx, x in enumerate(new_vec)}
+    print('----------------------')
+    print("KEYS:", keys)
+    print('----------------------')
+    for t in tokens:
+        if t in keys:
+            new_vec[keys[t]][1] += 1
+    print()
+    print("APPLY VEC:", len(vec), len(new_vec), new_vec)
+    print()
+    return new_vec
 
 
 def cross_validation(model):
@@ -53,7 +76,7 @@ def result(y):
 
 
 def parse_args():
-    global test_code
+    global test_src
     global test_result
 
     parser = argparse.ArgumentParser(
@@ -61,7 +84,7 @@ def parse_args():
     parser.add_argument('-test', '--test', nargs=2)
 
     args = parser.parse_args()
-    test_code = args.test[0]
+    test_src = args.test[0]
     test_result = args.test[1]
 
 
@@ -75,25 +98,42 @@ if __name__ == '__main__':
     normal_data = read('./dataset/level1/normal')
     normal_vec = vectorize(normal_data)
 
-    training += xss_vec
-    training += normal_vec
+    training += [n for _, n in xss_vec]
+    training += [n for _, n in normal_vec]
+    print('-------')
+    print("Training:", len(training), training)
+    print("  xss: ", xss_vec)
+    print("  normal: ", normal_vec)
+    print('-------')
     training = np.array(training).reshape(-1, 1)
 
     target += [1 for _ in xss_vec] # XSS is 1
     target += [0 for _ in normal_vec] # Normal is 0
+    print('-------')
+    print("Target:", len(target), target)
+    print('-------')
     target = np.array(target)
 
     model = GaussianNB()
     model.fit(training, target)
+    # Test with the training data.
     print(model.score(training, target))
 
     cross_validation(model)
 
-    if (test_code):
-        print("Validate:", test_code)
-        vec = np.array(vectorize(test_code)).reshape(-1, 1)
+    if (test_src):
+
+        print("Validate:", test_src)
+        data = read(test_src)
+        vec = apply_vec(data, (xss_vec + normal_vec))
+        vec = np.array([x[1] for x in vec], dtype=object)
+        print("Vector:", vec)
+        vec = vec.reshape(-1, 1)
         a = result(model.predict(vec))
+        print('==========')
+        print("Prediction:", model.predict(vec))
+        print('==========')
         print("Predict:", a, "XSS" if a == 1 else "Normal")
-        print("Expect:", test_result)
+        print("Expect: ", test_result, "XSS" if test_result == "1" else "Normal")
 
 

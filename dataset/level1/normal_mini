@@ -1,0 +1,20 @@
+<title>TWikiDocumentation</title>
+</head><body bgcolor="#ffffff">
+<h1><a name="Feb_2">(01 Feb 2003)</a></h1>
+<script language="JavaScript" type="text/javascript">
+<!-- TWiki -->
+<strong><em>Doubleclick</em></strong>
+<a href="#TWiki">TWiki System Requirements</a>
+<a href="#Server_Requirements">Server Requirements</a>
+<strong><em>Note:</em></strong><a href="" target="_top"></a>
+<strong><em>Related Topics:</em></strong> <a href="http://TWiki.org">TWikiSite</a>
+<h1><a name="TWiki_System_Requirements"> TWiki System Requirements </a></h1>
+<em>Server and client requirements for TWiki 01-Feb-2003</em>
+<h2><a name="Server_Requirements"> Server Requirements </a></h2>
+<a href="http://www.gnu.org" target="_top">RCS</a>
+<table border="1" cellspacing="0" cellpadding="1"> <tr><th colspan="3" bgcolor="#99CCCC"></th></tr>
+<tr><th bgcolor="#99CCCC"> <strong>Resource</strong> </th><th bgcolor="#99CCCC">
+<tr><td> Perl </td><td colspan="2" align="center"><br />
+<tr><td></td><td align="center"> <code>Net::SMTP</code></td></tr>
+<tr><td> RCS </td><td colspan="2" align="center"><br />
+<tr><td> GNU <code>diff</code> </td><td colspan="2" align="center"> GNU <code>diff</code><br />

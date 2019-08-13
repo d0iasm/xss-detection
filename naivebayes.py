@@ -84,8 +84,9 @@ def parse_args():
     parser.add_argument('-test', '--test', nargs=2)
 
     args = parser.parse_args()
-    test_src = args.test[0]
-    test_result = args.test[1]
+    if (args.test):
+        test_src = args.test[0]
+        test_result = args.test[1]
 
 
 if __name__ == '__main__':
@@ -122,7 +123,6 @@ if __name__ == '__main__':
     cross_validation(model)
 
     if (test_src):
-
         print("Validate:", test_src)
         data = read(test_src)
         vec = apply_vec(data, (xss_vec + normal_vec))
@@ -135,5 +135,4 @@ if __name__ == '__main__':
         print('==========')
         print("Predict:", a, "XSS" if a == 1 else "Normal")
         print("Expect: ", test_result, "XSS" if test_result == "1" else "Normal")
-
 

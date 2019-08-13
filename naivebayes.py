@@ -1,5 +1,6 @@
 import argparse
 import collections
+import math
 import numpy as np
 import pandas as pd
 from sklearn.naive_bayes import GaussianNB, ComplementNB
@@ -30,15 +31,28 @@ def clean(t):
 
 
 def vectorize(tokens):
-    # TODO: Vectorize based on TF-IDF
-    d = collections.defaultdict(int)
-    for k in tokens:
-        d[k] += 1
-    return [[i, n] for i, n in d.items()]
+    total = sum([len(t) for t in tokens])
+    vec = []
 
+    # Count term frequency.
+    dicts = []
+    for t in tokens:
+        d = collections.defaultdict(int)
+        for k in t:
+            d[k] += 1
+        dicts.append(d)
 
-def merge_vec(vec1, vec2):
-    pass
+    # Calculate TF-IDF.
+    for i, t in enumerate(tokens):
+        for term in t:
+            # TF(ti, dj) = (The count ti in dj) / (The total count ti in all documents)
+            tf = dicts[i][term] / sum([d[term] for d in dicts])
+
+            # IDF(ti) = log(The number of documents / The number of documents that has ti)
+            idf = math.log10(total / sum([1 if d[term] > 0 else 0 for d in dicts]) + 1)
+            vec.append([term, tf * idf])
+
+    return vec
 
 
 def apply_vec(tokens, vec):
@@ -70,9 +84,14 @@ def cross_validation(model):
         print(model.score(X_test, y_test))
 
 
-def result(y):
+def result(y, threshold):
     # XSS is 1 and normal is 0.
-    return 1 if y.sum() >= len(y) else 0
+    print('RESULT: prediction sum(), length of prediction, threshold')
+    print(y.sum())
+    print(len(y))
+    print(threshold)
+    print('-----------------------')
+    return 1 if y.sum()/len(y) >= threshold else 0
 
 
 def parse_args():
@@ -91,25 +110,23 @@ def parse_args():
 
 if __name__ == '__main__':
     parse_args()
-    training = []
-    target = []
 
-    xss_data = read('./dataset/level1/xss')
-    xss_vec = vectorize(xss_data)
     normal_data = read('./dataset/level1/normal')
-    normal_vec = vectorize(normal_data)
+    xss_data = read('./dataset/level1/xss')
+    training_data = [normal_data, xss_data]
+    vec = vectorize(training_data)
 
-    training += [n for _, n in xss_vec]
-    training += [n for _, n in normal_vec]
+    threshold = len(xss_data) / (len(xss_data) + len(normal_data))
+
+    training = [n for _, n in vec]
     print('-------')
     print("Training:", len(training), training)
-    print("  xss: ", xss_vec)
-    print("  normal: ", normal_vec)
+    print("  vector: ", vec)
     print('-------')
     training = np.array(training).reshape(-1, 1)
 
-    target += [1 for _ in xss_vec] # XSS is 1
-    target += [0 for _ in normal_vec] # Normal is 0
+    target = [0 for _ in range(len(normal_data))] # Normal is 0.
+    target += [1 for _ in range(len(xss_data))] # XSS is 1.
     print('-------')
     print("Target:", len(target), target)
     print('-------')
@@ -124,15 +141,16 @@ if __name__ == '__main__':
 
     if (test_src):
         print("Validate:", test_src)
-        data = read(test_src)
-        vec = apply_vec(data, (xss_vec + normal_vec))
-        vec = np.array([x[1] for x in vec], dtype=object)
-        print("Vector:", vec)
-        vec = vec.reshape(-1, 1)
-        a = result(model.predict(vec))
+        test_data = read(test_src)
+        test_vec = vectorize(training_data + [test_data])
+        # test_vec = apply_vec(data, (xss_vec + normal_vec))
+        test_vec = np.array([n for _, n in test_vec], dtype=object)
+        print("Vector:", test_vec)
+        test_vec = test_vec.reshape(-1, 1)
+        result = result(model.predict(test_vec), threshold)
         print('==========')
-        print("Prediction:", model.predict(vec))
+        print("Prediction:", model.predict(test_vec))
         print('==========')
-        print("Predict:", a, "XSS" if a == 1 else "Normal")
+        print("Predict:", result, "XSS" if result == 1 else "Normal")
         print("Expect: ", test_result, "XSS" if test_result == "1" else "Normal")
 
